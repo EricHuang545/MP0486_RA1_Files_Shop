@@ -1,0 +1,2 @@
+Name:Manzana;Price:10.00€;Stock:10;
+Name:Fresa;Price:5.00€;Stock:20;

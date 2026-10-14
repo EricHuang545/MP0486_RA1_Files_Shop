@@ -4,7 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import main.Shop;
@@ -30,7 +33,7 @@ public class DaoImplFile implements Dao {
 	@Override
 	public ArrayList<Product> getInventory() {
 		ArrayList<Product> inventory = new ArrayList<>();
-		
+
 		File f = new File(System.getProperty("user.dir") + File.separator + "files/inputInventory.txt");
 
 		try {
@@ -94,5 +97,43 @@ public class DaoImplFile implements Dao {
 			e.printStackTrace();
 		}
 		return inventory;
+	}
+
+	@Override
+	public boolean writeInventory(ArrayList<Product> inventory) {
+		LocalDate myObj = LocalDate.now();
+		String fileName = "inventory_" + myObj.toString() + ".txt";
+
+		File f = new File(System.getProperty("user.dir") + File.separator + "files" + File.separator + fileName);
+
+		try {
+			FileWriter fw = new FileWriter(f, false);
+			PrintWriter pw = new PrintWriter(fw);
+
+			for (Product product : inventory) {
+
+				StringBuilder line = new StringBuilder();
+
+				line.append("Name:" + product.getName() + ";");
+				line.append("Price:" + product.getWholesalerPrice() + ";");
+				line.append("Stock:" + product.getStock() + ";");
+
+				pw.write(line.toString());
+				pw.write("\n");
+			}
+
+			pw.close();
+
+			if (pw.checkError()) {
+				return false;
+			}
+
+			fw.close();
+			return true;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }
