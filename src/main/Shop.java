@@ -220,9 +220,6 @@ public class Shop {
 	 */
 	private void readInventory() {
 		this.setInventory(dao.getInventory());
-		for(Product inv : inventory) {
-			System.out.println(inv.toString());
-		}
 	}
 	
 	public boolean writeInventory() {
