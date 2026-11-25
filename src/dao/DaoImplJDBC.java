@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import main.Shop;
@@ -69,43 +70,73 @@ public class DaoImplJDBC implements Dao {
 	@Override
 	public ArrayList<Product> getInventory() {
 		String query = "select * from inventory";
-	    Statement stmt = null;
-	    ResultSet rs = null;
-	    ArrayList<Product> inventory = new ArrayList<Product>();
-	    Product product;
+		Statement stmt = null;
+		ResultSet rs = null;
+		ArrayList<Product> inventory = new ArrayList<Product>();
+		Product product;
 
-	    connect();
-	    try {
-	        stmt = connection.createStatement();
-	        rs = stmt.executeQuery(query);
-	        while (rs.next()) {
-	            product = new Product(
-	                    rs.getString("name"),
-	                    new Amount(rs.getDouble("wholesalerPrice")),
-	                    rs.getBoolean("available"),
-	                    rs.getInt("stock")
-	            );
-	            product.setId(rs.getInt("id"));
-	            inventory.add(product);
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    } finally {
-	        try {
-	            if (rs != null) rs.close();
-	            if (stmt != null) stmt.close();
-	        } catch (SQLException e) {
-	            e.printStackTrace();
-	        }
-	        disconnect();
-	    }
-	    return inventory;
+		connect();
+		try {
+			stmt = connection.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				product = new Product(rs.getString("name"), new Amount(rs.getDouble("wholesalerPrice")),
+						rs.getBoolean("available"), rs.getInt("stock"));
+				product.setId(rs.getInt("id"));
+				inventory.add(product);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmt != null)
+					stmt.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			disconnect();
+		}
+		return inventory;
 	}
 
 	@Override
 	public boolean writeInventory(ArrayList<Product> inventory) {
 		// TODO Auto-generated method stub
-		return false;
+		String query = "insert into historical_inventory "
+				+ "(id_product, name, wholesalerPrice, available, stock, created_at) " + "values (?, ?, ?, ?, ?, ?)";
+		PreparedStatement ps = null;
+		boolean ok = false;
+
+		// Mismo timestamp para todas las filas de esta exportación
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+
+		connect();
+		try {
+			ps = connection.prepareStatement(query);
+			for (Product product : inventory) {
+				ps.setInt(1, product.getId());
+				ps.setString(2, product.getName());
+				ps.setDouble(3, product.getWholesalerPrice().getValue());
+				ps.setBoolean(4, product.isAvailable());
+				ps.setInt(5, product.getStock());
+				ps.setTimestamp(6, now);
+				ps.executeUpdate();
+			}
+			ok = true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			disconnect();
+		}
+		return ok;
 	}
 
 }
