@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import main.Shop;
+import model.Amount;
 import model.Employee;
 import model.Product;
 
@@ -67,7 +68,38 @@ public class DaoImplJDBC implements Dao {
 
 	@Override
 	public ArrayList<Product> getInventory() {
-		return null;
+		String query = "select * from inventory";
+	    Statement stmt = null;
+	    ResultSet rs = null;
+	    ArrayList<Product> inventory = new ArrayList<Product>();
+	    Product product;
+
+	    connect();
+	    try {
+	        stmt = connection.createStatement();
+	        rs = stmt.executeQuery(query);
+	        while (rs.next()) {
+	            product = new Product(
+	                    rs.getString("name"),
+	                    new Amount(rs.getDouble("wholesalerPrice")),
+	                    rs.getBoolean("available"),
+	                    rs.getInt("stock")
+	            );
+	            product.setId(rs.getInt("id"));
+	            inventory.add(product);
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        try {
+	            if (rs != null) rs.close();
+	            if (stmt != null) stmt.close();
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	        disconnect();
+	    }
+	    return inventory;
 	}
 
 	@Override
